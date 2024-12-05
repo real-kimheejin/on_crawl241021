@@ -29,7 +29,18 @@ def create_zip(image_urls, address):
                 
                 # 이미지 다운로드 및 저장
                 headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Referer': 'https://www.onhouse.com/',
+                    'Origin': 'https://www.onhouse.com',
+                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"macOS"',
+                    'Sec-Fetch-Dest': 'image',
+                    'Sec-Fetch-Mode': 'no-cors',
+                    'Sec-Fetch-Site': 'cross-site'
                 }
                 response = requests.get(url, headers=headers)
                 
@@ -60,7 +71,7 @@ st.set_page_config(layout="wide", page_title="HTML 이미지 추출기")
 
 # 제목 및 설명
 st.title("🏠 부동산 매물 이미지 추출기")
-st.markdown("HTML 소스코드를 입력하면 이미지를 추출하여 ZIP 파일로 다운로드할 수 있습니다.")
+st.markdown("HTML 소스��드를 입력하면 이미지를 추출하여 ZIP 파일로 다운로드할 수 있습니다.")
 
 # HTML 입력 영역
 image_urls = []
@@ -141,7 +152,7 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         st.write(f"- 최종 추출된 이미지 URL 수: {len(image_urls)}")
         
         # 결과 표시
-        st.success(f"✅ {len(image_urls)}개 이미지 추��� 완료!")
+        st.success(f"✅ {len(image_urls)}개 이미지 추출 완료!")
         
         # 완료 (100%)
         progress_bar.empty()
