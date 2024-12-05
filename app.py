@@ -20,17 +20,30 @@ def create_zip(image_urls, address):
 
         for idx, url in enumerate(image_urls, 1):
             try:
-                
                 progress = int((idx / total_images) * 100)
                 progress_bar.progress(progress)
                 status_text.text(f"ZIP 파일 생성 중... ({idx}/{total_images})")
                 
+                # 디버깅: 현재 처리 중인 URL 출력
+                st.write(f"다운로드 시도 중: {url}")
+                
                 # 이미지 다운로드 및 저장
-                response = requests.get(url)
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                response = requests.get(url, headers=headers)
+                
+                # 디버깅: 응답 상태 코드 출력
+                st.write(f"응답 상태 코드: {response.status_code}")
+                
                 if response.status_code == 200:
                     image_data = response.content
                     filename = f"image_{idx}.jpg"
                     zip_file.writestr(filename, image_data)
+                    st.write(f"✓ 이미지 저장 완료: {filename}")
+                else:
+                    st.error(f"이미지 다운로드 실패 - 상태 코드: {response.status_code}")
+                    
             except Exception as e:
                 st.error(f"이미지 다운로드 중 오류 발생: {str(e)}")
 
@@ -38,7 +51,6 @@ def create_zip(image_urls, address):
         status_text.empty()
         progress_bar.empty()
         st.success(f"✅ {address} 매물 이미지 ZIP 파일 생성 완료!")
-        
     
     zip_buffer.seek(0)
     return zip_buffer.getvalue()
@@ -129,7 +141,7 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         st.write(f"- 최종 추출된 이미지 URL 수: {len(image_urls)}")
         
         # 결과 표시
-        st.success(f"✅ {len(image_urls)}개 이미지 추출 완료!")
+        st.success(f"✅ {len(image_urls)}개 이미지 추��� 완료!")
         
         # 완료 (100%)
         progress_bar.empty()
