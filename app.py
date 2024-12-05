@@ -93,12 +93,14 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
             # 이미지 URL 추출 진행
             total_slides = len(slides)
             for idx, slide in enumerate(slides):
-                img = slide.find('img')
-                if img:
-                    src = img.get('src')
-                    if any(ext in src.lower() for ext in ['.jpg', '.jpeg']):
-                        clean_url = src.split('?')[0]
-                        image_urls.append(clean_url)
+                # style 속성에서 background-image URL 찾기
+                style = slide.get('style', '')
+                if 'background-image: url("https:' in style:
+                    # URL 추출을 위한 정규식 패턴
+                    url_match = re.search(r'background-image: url\("(https:[^"]+(?:\.jpg|\.jpeg))"\)', style)
+                    if url_match:
+                        image_url = url_match.group(1)
+                        image_urls.append(image_url)
                 # 진행률 업데이트 (30% ~ 90%)
                 progress = 40 + (40 * (idx + 1) / total_slides)
                 progress_bar.progress(int(progress))
