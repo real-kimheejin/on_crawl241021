@@ -102,12 +102,19 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
             # 디버깅: 현재 처리 중인 style 속성 출력
             st.write(f"- 처리 중인 style 속성 {idx + 1}: {style}")
             
-            url_match = re.search(r'background-image: url\("(https:[^"]+(?:\.jpg|\.jpeg))"\)', style)
+            # 수정된 정규식 패턴: 쿼리 파라미터를 포함한 URL도 매칭
+            url_match = re.search(r'background-image: url\("(https:[^"]+)"\)', style)
             if url_match:
                 image_url = url_match.group(1)
-                image_urls.append(image_url)
-                # 디버깅: 추출된 URL 출력
-                st.write(f"  ✓ 추출된 URL: {image_url}")
+                # 기본 URL만 저장 (쿼리 파라미터 제거)
+                base_url = image_url.split('?')[0]
+                if base_url.lower().endswith(('.jpg', '.jpeg')):
+                    image_urls.append(base_url)
+                    # 디버깅: 추출된 URL 출력
+                    st.write(f"  ✓ 추출된 URL: {base_url}")
+                else:
+                    # 디버깅: 이미지 확장자 불일치
+                    st.write(f"  ✗ URL 추출 실패: 지원되지 않는 이미지 형식 - {base_url}")
             else:
                 # 디버깅: URL 추출 실패 원인
                 st.write("  ✗ URL 추출 실패: 정규식 패턴과 일치하지 않음")
