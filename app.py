@@ -159,15 +159,27 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
             
             if remaining_urls:
                 for idx, url in enumerate(remaining_urls, 1):
-                    if st.download_button(
-                        label=f"📥 {idx}번째 이미지",
-                        data=requests.get(url).content,
-                        file_name=f"image_{idx}.jpg",
-                        mime="image/jpeg",
-                        key=f"download_{url}"
-                    ):
-                        st.session_state.downloaded_urls.add(url)
-                        st.experimental_rerun()
+                    with st.form(key=f"form_{url}"):
+                        if st.form_submit_button(
+                            label=f"📥 {idx}번째 이미지",
+                            type="primary",
+                            use_container_width=True
+                        ):
+                            # 이미지 다운로드 로직
+                            try:
+                                response = requests.get(url)
+                                if response.status_code == 200:
+                                    st.download_button(
+                                        label="⬇️ 클릭하여 저장",
+                                        data=response.content,
+                                        file_name=f"image_{idx}.jpg",
+                                        mime="image/jpeg",
+                                        key=f"download_{url}",
+                                        use_container_width=True
+                                    )
+                                    st.session_state.downloaded_urls.add(url)
+                            except Exception as e:
+                                st.error(f"다운로드 중 오류 발생: {str(e)}")
             else:
                 st.success("✅ 모든 이미지를 다운로드했습니다!")
 
