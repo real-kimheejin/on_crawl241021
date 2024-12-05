@@ -71,7 +71,7 @@ st.set_page_config(layout="wide", page_title="HTML 이미지 추출기")
 
 # 제목 및 설명
 st.title("🏠 부동산 매물 이미지 추출기")
-st.markdown("HTML 소스��드를 입력하면 이미지를 추출하여 ZIP 파일로 다운로드할 수 있습니다.")
+st.markdown("HTML 소스드를 입력하면 이미지를 추출하여 ZIP 파일로 다운로드할 수 있습니다.")
 
 # HTML 입력 영역
 image_urls = []
@@ -107,7 +107,7 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         addr_elem = soup.find('h6', class_='addr_title')
         address = addr_elem.text if addr_elem else "주소를 찾을 수 없습니다"
         
-        # 이미지 URL 추출 시작 (30%)
+        # 이미지 URL 추�� 시작 (30%)
         time.sleep(0.5)
         status_text.text("🖼️ 이미지 URL 추출 중...")
         progress_bar.progress(30)
@@ -167,19 +167,25 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         with col2:
             st.info(f"🖼️ 발견된 이미지: {len(image_urls)}개")
         
-        
-        # 다운로드 버튼
+        # URL 목록 표시
         if image_urls:
-            # ZIP 파일 생성 및 다운로드 버튼
-
-            st.download_button(
-                label="📥 이미지 ZIP 다운로드",
-                data=create_zip(image_urls, address),
-                file_name=f"{address}.zip",
-                mime="application/zip",
-                use_container_width=True,
-                type="primary"
-            )
+            st.markdown("### 📋 이미지 URL 목록")
+            st.markdown("각 URL을 클릭하면 새 탭에서 이미지를 볼 수 있습니다.")
+            
+            # 세션 상태에 체크박스 상태 초기화
+            if 'checked_urls' not in st.session_state:
+                st.session_state.checked_urls = set()
+            
+            for idx, url in enumerate(image_urls, 1):
+                col1, col2 = st.columns([1, 11])
+                with col1:
+                    # 체크박스 상태 업데이트
+                    if st.checkbox("", key=f"check_{url}", value=(url in st.session_state.checked_urls)):
+                        st.session_state.checked_urls.add(url)
+                    else:
+                        st.session_state.checked_urls.discard(url)
+                with col2:
+                    st.markdown(f"[🖼️ 이미지 {idx}]({url})")
 
     else:
         st.warning("HTML 소스를 입력해주세요.")
