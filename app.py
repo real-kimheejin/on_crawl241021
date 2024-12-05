@@ -72,7 +72,11 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         status_text.text("🔍 HTML 파싱 중...")
         progress_bar.progress(10)
         soup = BeautifulSoup(html_source, 'html.parser')
-
+        
+        # 디버깅: HTML 파싱 결과 확인
+        st.write("🔍 디버깅 정보:")
+        st.write(f"- HTML 길이: {len(html_source)} 문자")
+        
         # 주소 추출 (20%)
         time.sleep(0.5)
         status_text.text("📍 주소 추출 중...")
@@ -88,19 +92,34 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         # style 속성에서 background-image URL 찾기
         elements_with_style = soup.find_all(lambda tag: tag.get('style') and 'background-image: url("https:' in tag.get('style'))
         total_elements = len(elements_with_style)
+        
+        # 디버깅: style 속성을 가진 요소 수 출력
+        st.write(f"- style 속성이 있는 요소 수: {len(soup.find_all(lambda tag: tag.get('style')))}")
+        st.write(f"- background-image URL을 포함하는 요소 수: {total_elements}")
 
         for idx, element in enumerate(elements_with_style):
             style = element.get('style', '')
+            # 디버깅: 현재 처리 중인 style 속성 출력
+            st.write(f"- 처리 중인 style 속성 {idx + 1}: {style}")
+            
             url_match = re.search(r'background-image: url\("(https:[^"]+(?:\.jpg|\.jpeg))"\)', style)
             if url_match:
                 image_url = url_match.group(1)
                 image_urls.append(image_url)
+                # 디버깅: 추출된 URL 출력
+                st.write(f"  ✓ 추출된 URL: {image_url}")
+            else:
+                # 디버깅: URL 추출 실패 원인
+                st.write("  ✗ URL 추출 실패: 정규식 패턴과 일치하지 않음")
             
             # 진행률 업데이트 (30% ~ 90%)
             progress = 40 + (40 * (idx + 1) / total_elements)
             progress_bar.progress(int(progress))
             time.sleep(0.1)
             status_text.text(f"🖼️ 이미지 추출 중... ({idx + 1}/{total_elements})")
+        
+        # 디버깅: 최종 결과
+        st.write(f"- 최종 추출된 이미지 URL 수: {len(image_urls)}")
         
         # 결과 표시
         st.success(f"✅ {len(image_urls)}개 이미지 추출 완료!")
