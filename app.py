@@ -84,60 +84,54 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         time.sleep(0.5)
         status_text.text("🖼️ 이미지 URL 추출 중...")
         progress_bar.progress(30)
-        swiper_wrapper = soup.find('div', class_='swiper-wrapper')
+        
+        # style 속성에서 background-image URL 찾기
+        elements_with_style = soup.find_all(lambda tag: tag.get('style') and 'background-image: url("https:' in tag.get('style'))
+        total_elements = len(elements_with_style)
+
+        for idx, element in enumerate(elements_with_style):
+            style = element.get('style', '')
+            url_match = re.search(r'background-image: url\("(https:[^"]+(?:\.jpg|\.jpeg))"\)', style)
+            if url_match:
+                image_url = url_match.group(1)
+                image_urls.append(image_url)
+            
+            # 진행률 업데이트 (30% ~ 90%)
+            progress = 40 + (40 * (idx + 1) / total_elements)
+            progress_bar.progress(int(progress))
+            time.sleep(0.1)
+            status_text.text(f"🖼️ 이미지 추출 중... ({idx + 1}/{total_elements})")
+        
+        # 결과 표시
+        st.success(f"✅ {len(image_urls)}개 이미지 추출 완료!")
+        
+        # 완료 (100%)
+        progress_bar.empty()
+        status_text.empty()  # 상태 텍스트 제거
         
 
-        if swiper_wrapper:
-            slides = swiper_wrapper.find_all('div', class_='swiper-slide')
+        
+        # 주소와 이미지 개수 표시
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"📍 주소: {address}")
+        with col2:
+            st.info(f"🖼️ 발견된 이미지: {len(image_urls)}개")
+        
+        
+        # 다운로드 버튼
+        if image_urls:
+            # ZIP 파일 생성 및 다운로드 버튼
 
-            # 이미지 URL 추출 진행
-            total_slides = len(slides)
-            for idx, slide in enumerate(slides):
-                # style 속성에서 background-image URL 찾기
-                style = slide.get('style', '')
-                if 'background-image: url("https:' in style:
-                    # URL 추출을 위한 정규식 패턴
-                    url_match = re.search(r'background-image: url\("(https:[^"]+(?:\.jpg|\.jpeg))"\)', style)
-                    if url_match:
-                        image_url = url_match.group(1)
-                        image_urls.append(image_url)
-                # 진행률 업데이트 (30% ~ 90%)
-                progress = 40 + (40 * (idx + 1) / total_slides)
-                progress_bar.progress(int(progress))
-                time.sleep(0.1)
-                status_text.text(f"🖼️ 이미지 추출 중... ({idx + 1}/{total_slides})")
-            # 결과 표시
-            st.success(f"✅ {len(image_urls)}개 이미지 추출 완료!")
-            
-            # 완료 (100%)
-            progress_bar.empty()
-            status_text.empty()  # 상태 텍스트 제거
-            
+            st.download_button(
+                label="📥 이미지 ZIP 다운로드",
+                data=create_zip(image_urls, address),
+                file_name=f"{address}.zip",
+                mime="application/zip",
+                use_container_width=True,
+                type="primary"
+            )
 
-            
-            # 주소와 이미지 개수 표시
-            col1, col2 = st.columns(2)
-            with col1:
-                st.info(f"📍 주소: {address}")
-            with col2:
-                st.info(f"🖼️ 발견된 이미지: {len(image_urls)}개")
-            
-            
-            # 다운로드 버튼
-            if image_urls:
-                # ZIP 파일 생성 및 다운로드 버튼
-
-                st.download_button(
-                    label="📥 이미지 ZIP 다운로드",
-                    data=create_zip(image_urls, address),
-                    file_name=f"{address}.zip",
-                    mime="application/zip",
-                    use_container_width=True,
-                    type="primary"
-                )
-
-        else:
-            st.error("이미지를 찾을 수 없습니다.")
     else:
         st.warning("HTML 소스를 입력해주세요.")
 
