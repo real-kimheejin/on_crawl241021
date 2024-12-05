@@ -97,8 +97,7 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         soup = BeautifulSoup(html_source, 'html.parser')
         
         # 디버깅: HTML 파싱 결과 확인
-        st.write("🔍 디버깅 정보:")
-        st.write(f"- HTML 길이: {len(html_source)} 문자")
+        st.write(f"🔍 HTML 길이: {len(html_source)}자")
         
         # 주소 추출 (20%)
         time.sleep(0.5)
@@ -107,7 +106,7 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         addr_elem = soup.find('h6', class_='addr_title')
         address = addr_elem.text if addr_elem else "주소를 찾을 수 없습니다"
         
-        # 이미지 URL 추�� 시작 (30%)
+        # 이미지 URL 추출 시작 (30%)
         time.sleep(0.5)
         status_text.text("🖼️ 이미지 URL 추출 중...")
         progress_bar.progress(30)
@@ -115,16 +114,9 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         # style 속성에서 background-image URL 찾기
         elements_with_style = soup.find_all(lambda tag: tag.get('style') and 'background-image: url("https:' in tag.get('style'))
         total_elements = len(elements_with_style)
-        
-        # 디버깅: style 속성을 가진 요소 수 출력
-        st.write(f"- style 속성이 있는 요소 수: {len(soup.find_all(lambda tag: tag.get('style')))}")
-        st.write(f"- background-image URL을 포함하는 요소 수: {total_elements}")
 
         for idx, element in enumerate(elements_with_style):
             style = element.get('style', '')
-            # 디버깅: 현재 처리 중인 style 속성 출력
-            st.write(f"- 처리 중인 style 속성 {idx + 1}: {style}")
-            
             # 수정된 정규식 패턴: 쿼리 파라미터를 포함한 URL도 매칭
             url_match = re.search(r'background-image: url\("(https:[^"]+)"\)', style)
             if url_match:
@@ -133,14 +125,6 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
                 base_url = image_url.split('?')[0]
                 if base_url.lower().endswith(('.jpg', '.jpeg')):
                     image_urls.append(base_url)
-                    # 디버깅: 추출된 URL 출력
-                    st.write(f"  ✓ 추출된 URL: {base_url}")
-                else:
-                    # 디버깅: 이미지 확장자 불일치
-                    st.write(f"  ✗ URL 추출 실패: 지원되지 않는 이미지 형식 - {base_url}")
-            else:
-                # 디버깅: URL 추출 실패 원인
-                st.write("  ✗ URL 추출 실패: 정규식 패턴과 일치하지 않음")
             
             # 진행률 업데이트 (30% ~ 90%)
             progress = 40 + (40 * (idx + 1) / total_elements)
@@ -148,17 +132,12 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
             time.sleep(0.1)
             status_text.text(f"🖼️ 이미지 추출 중... ({idx + 1}/{total_elements})")
         
-        # 디버깅: 최종 결과
-        st.write(f"- 최종 추출된 이미지 URL 수: {len(image_urls)}")
-        
         # 결과 표시
         st.success(f"✅ {len(image_urls)}개 이미지 추출 완료!")
         
         # 완료 (100%)
         progress_bar.empty()
-        status_text.empty()  # 상태 텍스트 제거
-        
-
+        status_text.empty()
         
         # 주소와 이미지 개수 표시
         col1, col2 = st.columns(2)
@@ -169,23 +148,28 @@ if st.button("이미지 추출하기", type="primary", use_container_width=True,
         
         # URL 목록 표시
         if image_urls:
-            st.markdown("### 📋 이미지 URL 목록")
-            st.markdown("각 URL을 클릭하면 새 탭에서 이미지를 볼 수 있습니다.")
+            st.markdown("### 📋 이미지 다운로드")
             
-            # 세션 상태에 체크박스 상태 초기화
-            if 'checked_urls' not in st.session_state:
-                st.session_state.checked_urls = set()
+            # 세션 상태에 다운로드한 URL 저장
+            if 'downloaded_urls' not in st.session_state:
+                st.session_state.downloaded_urls = set()
             
-            for idx, url in enumerate(image_urls, 1):
-                col1, col2 = st.columns([1, 11])
-                with col1:
-                    # 체크박스 상태 업데이트
-                    if st.checkbox("", key=f"check_{url}", value=(url in st.session_state.checked_urls)):
-                        st.session_state.checked_urls.add(url)
-                    else:
-                        st.session_state.checked_urls.discard(url)
-                with col2:
-                    st.markdown(f"[🖼️ 이미지 {idx}]({url})")
+            # 남은 URL만 표시
+            remaining_urls = [url for url in image_urls if url not in st.session_state.downloaded_urls]
+            
+            if remaining_urls:
+                for idx, url in enumerate(remaining_urls, 1):
+                    if st.download_button(
+                        label=f"📥 {idx}번째 이미지",
+                        data=requests.get(url).content,
+                        file_name=f"image_{idx}.jpg",
+                        mime="image/jpeg",
+                        key=f"download_{url}"
+                    ):
+                        st.session_state.downloaded_urls.add(url)
+                        st.experimental_rerun()
+            else:
+                st.success("✅ 모든 이미지를 다운로드했습니다!")
 
     else:
         st.warning("HTML 소스를 입력해주세요.")
